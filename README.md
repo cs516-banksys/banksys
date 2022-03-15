@@ -1,16 +1,18 @@
 # banksys
-Unzip the code.
-Run commands under root dictionary:
-export FLASK_ENV=Development
+## Unzip the code.
 
-export FLASK_APP=bank.py
+##Run commands under root dictionary:
 
-export FLASK_DEV=True
+`export FLASK_ENV=Development`
 
-download reqiured pacakge
-pip3 install flask
+`export FLASK_APP=bank.py`
 
-pip3 install flask flask-bootstrap flask-migrate flask-moment flask-login flask-wtf wtforms email-validator sqlalchemy sqlalchemy-migrate
+`export FLASK_DEV=True`
 
-run
-flask run
+## download reqiured pacakge
+`pip3 install flask`
+
+`pip3 install flask flask-bootstrap flask-migrate flask-moment flask-login flask-wtf wtforms email-validator sqlalchemy sqlalchemy-migrate`
+
+## run
+`flask run`
