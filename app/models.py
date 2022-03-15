@@ -57,6 +57,7 @@ class Client(db.Model):
     name = db.Column(db.String(20))
     phone = db.Column(db.String(15))
     address = db.Column(db.String(256))
+    email = db.Column(db.String(30), default='')
     contact_name = db.Column(db.String(20))
     contact_phone = db.Column(db.String(15), default='')
     contact_email = db.Column(db.String(30), default='')

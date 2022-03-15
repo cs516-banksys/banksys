@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Clients Management{% endblock %}
+
+{% block page_content %}
+<div class="col-md-4">
+    {{ wtf.quick_form(form) }}
+</div>
+
+{% include '_client.html' %}
+
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, '.client') }}
+</div>
+{% endif %}
+{% endblock %}
