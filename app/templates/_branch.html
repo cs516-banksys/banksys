@@ -1,0 +1,19 @@
+<table class="table table-hover">
+    <tr>
+        <th>Branch Name</th>
+        <th>City</th>
+        <th>Asset</th>
+        <th>Action</th>
+    </tr>
+    {% for branch in branches %}
+    <tr>
+        <td>{{ branch.name }}</td>
+        <td>{{ branch.city }}</td>
+        <td>{{ branch.asset }}</td>
+        <td>
+                <a class="btn btn-success btn-sm" type="buttoon" href="{{ url_for('main.branch_edit', branch_name=branch.name) }}">Edit</a>
+                <a class="btn btn-danger btn-sm" type="button" href="{{ url_for('main.branch_delete', id=branch.name) }}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
