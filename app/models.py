@@ -171,43 +171,7 @@ class SavingConstraint(db.Model):
     )
 
 
-class CheckAccount(db.Model):
-    __tablename__ = 'checks'
-    id = db.Column(db.String(20), primary_key=True)
-    branch_name = db.Column(db.String(100), db.ForeignKey('branches.name'))
-    employee_id = db.Column(db.String(20), db.ForeignKey('employees.id'))
-    balance = db.Column(db.Float)
-    open_date = db.Column(db.DateTime, default=datetime.utcnow)
-    over_draft = db.Column(db.Float)
-    last_access_date = db.Column(db.DateTime, default=datetime.utcnow)
-
-    clients = db.relationship(
-        'ClientCheck',
-        foreign_keys=[ClientCheck.check_id],
-        backref=db.backref('check_account', lazy='joined'),
-        lazy='dynamic',
-        cascade='all, delete-orphan'
-    )
-
-    @staticmethod
-    def on_changed_balance(target, value, oldvalue, initiator):
-        target.last_access_date = datetime.utcnow()
-
-db.event.listen(CheckAccount.balance, 'set', CheckAccount.on_changed_balance)
-
-class CheckConstraint(db.Model):
-    __tablename__ = 'checkconstraint'
-    client_id = db.Column(db.String(20), db.ForeignKey(
-        'clients.id'), primary_key=True)
-    branch_name = db.Column(db.String(100), db.ForeignKey(
-        'branches.name'), primary_key=True)
-    check_id = db.Column(db.String(20), db.ForeignKey(
-        'savings.id'), primary_key=True)
-
-    __table_args__ = (
-        db.UniqueConstraint('client_id', 'branch_name', name='con1'),
-    )
-
+# checking account not deploy yet
 
 class SystemUser(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)

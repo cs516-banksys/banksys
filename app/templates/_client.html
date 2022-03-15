@@ -1,0 +1,32 @@
+<table class="table table-hover">
+    <tr>
+        <th>SSN</th>
+        <th>Name</th>
+        <th>Phone Number</th>
+        <th>Address</th>
+        <th>Email</th>
+        <th>Contact Name</th>
+        <th>Contact Phone</th>
+        <th>Contact Email</th>
+        <th>Contact Relation</th>
+        <th>Operation</th>
+    </tr>
+    {% for c in clients %}
+    <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.name }}</td>
+        <td>{{ c.phone }}</td>
+        <td>{{ c.address }} </td>
+        <td>{{ c.email }} </td>
+        <td>{{ c.contact_name }} </td>
+        <td>{{ c.contact_phone }} </td>
+        <td>{{ c.contact_email }} </td>
+        <td>{{ c.contact_relation }} </td>
+
+        <td>
+                <a class="btn btn-success btn-sm" type="buttoon" href="{{ url_for('main.client_edit', client_id=c.id) }}">Edit</a>
+                <a class="btn btn-danger btn-sm" type="button" href="{{ url_for('main.client_delete', id=c.id) }}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
