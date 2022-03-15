@@ -1,16 +1,5 @@
-from flask import render_template, redirect, url_for, make_response, request, current_app, flash
-from .forms import BranchSearchForm, BranchEditForm, EmployeeEditForm, EmployeeSearchForm, ClientEditForm, ClientSearchForm, SavingAccountEditForm, SavingAccountSearchForm, LoanEditForm, LoanSearchForm, LoanLogEditForm
-from . import main
-from .. import db
-from ..models import Branch, Employee, Client, SavingAccount, ClientSaving, SavingConstraint,  ClientCheck,  HasLoan, Loan, LoanLog, BranchRecords
-from datetime import date
-from flask_login import login_required
-from sqlalchemy import extract
-import datetime
 
-@main.route('/')
-def index():
-    return render_template('index.html')
+
 
 
 

@@ -1,8 +1,3 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SubmitField, FloatField, SelectMultipleField
-from wtforms.validators import DataRequired, InputRequired, NumberRange, Regexp, Optional, Email
-from wtforms.fields import DateField
-from ..models import Branch, Employee, Client, Loan
 
 
 
