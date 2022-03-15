@@ -1,8 +1,8 @@
 from flask import render_template, redirect, url_for, make_response, request, current_app, flash
-from .forms import BranchSearchForm, BranchEditForm
+from .forms import BranchSearchForm, BranchEditForm, ClientEditForm, ClientSearchForm, SavingAccountEditForm, SavingAccountSearchForm
 from . import main
 from .. import db
-from ..models import Branch
+from ..models import Branch, Client, SavingAccount, ClientSaving, SavingConstraint
 from flask_login import login_required
 
 @main.route('/')
