@@ -1,7 +1,7 @@
 # banksys
 ## Unzip the code.
 
-##Run commands under root dictionary:
+## Run commands under root dictionary:
 
 `export FLASK_ENV=Development`
 
