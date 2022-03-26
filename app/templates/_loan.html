@@ -1,0 +1,30 @@
+<table class="table table-hover">
+    <tr>
+        <th>Loan ID</th>
+        <th>Issuing Branch</th>
+        <th>Contacting employee</th>
+        <th>Loanee</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    {% for a in loans %}
+    <tr>
+        <td>{{ a.id }}</td>
+        <td><a href="{{ url_for('main.branch_edit', branch_name=a.branch.name) }}">{{ a.branch.name }}</a></td>
+        <td><a href="{{ url_for('main.employee_edit', employee_id=a.employee.id) }}">{{ a.employee.name }}</a></td>
+        <td>
+            {% for x in a.clients.all() %}
+                {{ x.client.name}} 
+            {% endfor %}
+        </td>
+        <td>{{ a.amount }}</td>
+        <td>{{ a.status }}</td>
+        <td>
+                <a class="btn btn-primary btn-sm" type="button" href="{{ url_for('main.loan_log_edit', loan_log_id='create', loan_id=a.id) }}">Release loan</a>
+                <a class="btn btn-info btn-sm" type="button" href="{{ url_for('main.loan_log', loan_id=a.id) }}">Release history</a>
+                <a class="btn btn-danger btn-sm" type="button" href="{{ url_for('main.loan_delete', loan_id=a.id) }}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

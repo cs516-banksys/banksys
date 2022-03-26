@@ -588,3 +588,96 @@ def loan_show_all():
     resp.set_cookie('search_loan_employee_id', '', max_age=10*60)
     resp.set_cookie('search_loan_clients', '', max_age=10*60)
     return resp
+
+@main.route('/loan_log_edit/<string:loan_log_id>', methods=['GET', 'POST'])
+@login_required
+def loan_log_edit(loan_log_id):
+    form = LoanLogEditForm()
+    if request.args.get('loan_id'):
+        form.loan_id.data = request.args.get('loan_id')
+    if form.validate_on_submit():
+        if loan_log_id == 'create':
+            if LoanLog.query.filter_by(id=form.id.data).first():
+                flash('This loan ID exists, unable to create')
+                return render_template('loan_log_edit.html', form=form)
+            loan_log = LoanLog(
+                id=form.id.data,
+                loan_id=form.loan_id.data,
+                amount=form.amount.data
+            )
+            db.session.add(loan_log)
+            db.session.commit()
+            total_amount = sum([log.amount for log in loan_log.loan.loan_logs.all()])
+            if total_amount >= loan_log.loan.amount:
+                loan = loan_log.loan
+                loan.status = 'All loans are released'
+                db.session.add(loan)
+                db.session.commit()
+            else:
+                loan = loan_log.loan
+                loan.status = 'Releasing loan'
+                db.session.add(loan)
+                db.session.commit()
+            flash('Added')
+            return redirect(url_for('.loan_show_all'))
+        else:
+            loan_log = LoanLog.query.filter_by(id=loan_log_id).first_or_404()
+            if loan.id != form.id.data:
+                if LoanLog.query.filter_by(id=form.id.data).first():
+                    flash('This loan ID exists, unable to create')
+                    return render_template('loan_log_edit.html', form=form)
+            loan_log.id = form.id.data
+            loan_log.loan_id = form.loan_id.data
+            loan_log.amount = form.amount.data
+            db.session.add(loan)
+            db.session.commit(loan)
+
+            total_amount = sum([log.amount for log in loan_log.loan.loan_logs.all()])
+            if total_amount >= loan_log.loan.amount:
+                loan = loan_log.loan
+                loan.status = 'All loans are released'
+                db.session.add(loan)
+                db.session.commit()
+            else:
+                loan = loan_log.loan
+                loan.status = 'Releasing loan'
+                db.session.add(loan)
+                db.session.commit()
+            flash('Loan info updated')
+            return redirect(url_for('.loan_show_all'))
+
+
+    if loan_log_id != 'create':
+        loan_log = LoanLog.query.filter_by(id=loan_log_id).first_or_404()
+        form.id.data = loan_log.id
+        form.loan_id.data = loan_log.loan_id
+        form.amount.data = loan_log.amount
+
+    return render_template('loan_log_edit.html', form=form)
+
+
+@main.route('/loan_log/<string:loan_id>')
+@login_required
+def loan_log(loan_id):
+    query = LoanLog.query.filter_by(loan_id=loan_id)
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(
+        page, per_page=current_app.config['ITEMS_PER_PAGE'], error_out=False)
+    loan_logs = pagination.items
+
+    return render_template('loan_log.html', loan_logs=loan_logs, pagination=pagination, loan_id=loan_id)
+
+
+@main.route('/loan_delete/<string:loan_id>')
+@login_required
+def loan_delete(loan_id):
+    loan = Loan.query.filter_by(id=loan_id).first_or_404()
+    if loan.status == 'Releasing':
+        flash('Unable to detete releasing loan')
+        return redirect(url_for('.loan_show_all'))
+    loan.clients.delete()
+    loan.loan_logs.delete()
+    db.session.delete(loan)
+    db.session.commit()
+    flash('Deleted')
+    return redirect(url_for('.loan_show_all'))

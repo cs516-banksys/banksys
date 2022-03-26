@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Loan management{% endblock %}
+
+{% block page_content %}
+<table class="table table-hover">
+    <tr>
+        <th>Loan ID</th>
+        <th>Amount</th>
+        <th>Time of issue</th>
+    </tr>
+    {% for a in loan_logs %}
+    <tr>
+        <td>{{ a.id }}</td>
+        <td>{{ a.amount }}</td>
+        <td>{{ moment(a.date).fromNow() }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, '.loan_log', loan_id=loan_id) }}
+</div>
+{% endif %}
+{% endblock %}
