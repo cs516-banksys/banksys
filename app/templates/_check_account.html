@@ -1,0 +1,27 @@
+<table class="table table-hover">
+    <tr>
+        <th>Account ID<</th>
+        <th>Branch Name</th>
+        <th>Employee Name</th>
+        <th>Balance</th>
+        <th>Overdraft</th>
+        <th>Open Date</th>
+        <th>Latest Access Date</th>
+        <th>Operation</th>
+    </tr>
+    {% for a in check_accounts %}
+    <tr>
+        <td>{{ a.id }}</td>
+        <td><a href="{{ url_for('main.branch_edit', branch_name=a.branch.name) }}">{{ a.branch.name }}</a></td>
+        <td><a href="{{ url_for('main.employee_edit', employee_id=a.employee.id) }}">{{ a.employee.name }}</a></td>
+        <td>{{ a.balance }}</td>
+        <td>{{ a.over_draft }}</td>
+        <td>{{ moment(a.open_date).format('LLL') }} </td>
+        <td>{{ moment(a.last_access_date).fromNow() }} </td>
+        <td>
+                <a class="btn btn-success btn-sm" type="buttoon" href="{{ url_for('main.check_account_edit', account_id=a.id) }}">Edit</a>
+                <a class="btn btn-danger btn-sm" type="button" href="{{ url_for('main.check_account_delete', account_id=a.id) }}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
