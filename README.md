@@ -1,8 +1,8 @@
 # banksys
 ## Unzip the code.
 
-## Run commands under root dictionary:
-
+## set environment:
+Run commands under root dictionary
 `export FLASK_ENV=Development`
 
 `export FLASK_APP=bank.py`
