@@ -10,9 +10,8 @@
 `export FLASK_DEV=True`
 
 ## download reqiured pacakge
-`pip3 install flask`
+`pip3 install -r requirements`
 
-`pip3 install flask flask-bootstrap flask-migrate flask-moment flask-login flask-wtf wtforms email-validator sqlalchemy sqlalchemy-migrate`
 
 ## run
 `flask run`
