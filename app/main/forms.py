@@ -184,6 +184,15 @@ class LoanSearchForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(LoanSearchForm, self).__init__(*args, **kwargs)
+        self.branch_name.choices = [('', '')]
+        self.branch_name.choices.extend([(branch.name, branch.name)
+                             for branch in Branch.query.all()])
+        self.clients.choices = [(client.id, client.name + ', ' + client.id)
+                             for client in Client.query.all()]
+        self.employee_id.choices = [('', '')]
+        self.employee_id.choices.extend([(employee.id, employee.name + ', ' + employee.id)
+                             for employee in Employee.query.all()])
+
 class LoanLogEditForm(FlaskForm):
     id = StringField("Loan offer ID", validators=[InputRequired()])
     loan_id = SelectField('Loan ID', validators=[InputRequired()])

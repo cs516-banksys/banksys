@@ -724,8 +724,12 @@ def loan():
     if search_loan_clients != []:
         for c_id in search_loan_clients:
             query = query.filter(Loan.clients.any(client_id=c_id))
-            form.clients.data = search_loan_clients
-            loans = pagination.items
+        form.clients.data = search_loan_clients
+
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(
+        page, per_page=current_app.config['ITEMS_PER_PAGE'], error_out=False)
+    loans = pagination.items
 
     return render_template('loan.html', form=form, loans=loans, pagination=pagination)
 
