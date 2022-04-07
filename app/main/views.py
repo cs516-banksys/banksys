@@ -1,9 +1,14 @@
 from flask import render_template, redirect, url_for, make_response, request, current_app, flash
-from .forms import BranchSearchForm, BranchEditForm, ClientEditForm, ClientSearchForm, SavingAccountEditForm, SavingAccountSearchForm
+from .forms import BranchSearchForm, BranchEditForm, ClientEditForm, ClientSearchForm, SavingAccountEditForm, SavingAccountSearchForm,CheckAccountEditForm, CheckAccountSearchForm
 from . import main
 from .. import db
-from ..models import Branch, Client, SavingAccount, ClientSaving, SavingConstraint
+from ..models import Branch, Client, SavingAccount, ClientSaving, SavingConstraint,CheckAccount, ClientCheck, CheckConstraint
 from flask_login import login_required
+from datetime import date
+from sqlalchemy import extract
+import datetime
+
+
 
 @main.route('/')
 def index():
@@ -257,7 +262,7 @@ def saving_account_edit(account_id):
     if form.validate_on_submit():
         if account_id == 'create':
             if SavingAccount.query.filter_by(id=form.id.data).first():
-                flash('Account already exist!')
+                flash('Account ID already exists!')
                 return render_template('saving_account_edit.html', form=form)
             saving_account = SavingAccount(
                 id=form.id.data,
@@ -274,7 +279,7 @@ def saving_account_edit(account_id):
                 db.session.add(client_saving)
                 if SavingConstraint.query.filter_by(client_id=client.id, branch_name=saving_account.branch_name).first():
                     db.session.rollback()
-                    flash('Each client could only have one saving account!')
+                    flash('Each client could only have one saving account in a branch!')
                     return render_template('saving_account_edit.html', form=form)
                 saving_constraint = SavingConstraint(
                     client_id=client.id,
@@ -289,7 +294,7 @@ def saving_account_edit(account_id):
             saving_account = SavingAccount.query.filter_by(id=account_id).first_or_404()
             if saving_account.id != form.id.data:
                 if SavingAccount.query.filter_by(id=form.id.data).first():
-                    flash('Account already exist!')
+                    flash('Account ID already exists!')
                     return render_template('saving_account_edit.html', form=form)
             orig_account_id = saving_account.id
             saving_account.id = form.id.data
@@ -310,7 +315,7 @@ def saving_account_edit(account_id):
                 db.session.add(client_saving)
                 if SavingConstraint.query.filter_by(client_id=client.id, branch_name=saving_account.branch_name).first():
                     db.session.rollback()
-                    flash('Each client could only have one saving account!')
+                    flash('Each client could only have one saving account in a branch!')
                     return render_template('saving_account_edit.html', form=form)
                 saving_constraint = SavingConstraint(
                     client_id=client.id,
@@ -405,3 +410,151 @@ def saving_account_delete(account_id):
     flash('Successfully delete!')
     return redirect(url_for('.saving_account_show_all'))
 
+@main.route('/check_account_edit/<string:account_id>', methods=['GET', 'POST'])
+@login_required
+def check_account_edit(account_id):
+    form = CheckAccountEditForm()
+    if form.validate_on_submit():
+        if account_id == 'create':
+            if CheckAccount.query.filter_by(id=form.id.data).first():
+                flash('Account ID already exists!')
+                return render_template('check_account_edit.html', form=form)
+            check_account = CheckAccount(
+                id=form.id.data,
+                branch_name=form.branch_name.data,
+                employee_id=form.employee_id.data,
+                balance=form.balance.data,
+                over_draft=form.over_draft.data
+            )
+            db.session.add(check_account)
+            for c_id in form.clients.data:
+                client = Client.query.filter_by(id=c_id).first_or_404()
+                client_check = ClientCheck(client=client, check_account=check_account)
+                db.session.add(client_check)
+                if CheckConstraint.query.filter_by(client_id=client.id, branch_name=check_account.branch_name).first():
+                    db.session.rollback()
+                    flash('Each client could only have one checking account in a branch!')
+                    return render_template('check_account_edit.html', form=form)
+                check_constraint = CheckConstraint(
+                    client_id=client.id,
+                    branch_name=check_account.branch_name,
+                    check_id=check_account.id
+                )
+                db.session.add(check_constraint)
+            db.session.commit()
+            flash('Successfully add checking account!')
+            return redirect(url_for('.check_account_edit', account_id=check_account.id))
+        else:
+            check_account = CheckAccount.query.filter_by(id=account_id).first_or_404()
+            if check_account.id != form.id.data:
+                if CheckAccount.query.filter_by(id=form.id.data).first():
+                    flash('Account ID already exists!')
+                    return render_template('check_account_edit.html', form=form)
+            orig_account_id = check_account.id
+            check_account.id = form.id.data
+            check_account.branch_name = form.branch_name.data
+            check_account.employee_id = form.employee_id.data
+            check_account.balance = form.balance.data
+            check_account.over_draft = form.over_draft.data
+
+            db.session.add(check_account)
+
+            ClientCheck.query.filter_by(check_id=orig_account_id).delete()
+            CheckConstraint.query.filter_by(check_id=orig_account_id).delete()
+            db.session.commit()
+
+            for c_id in form.clients.data:
+                client = Client.query.filter_by(id=c_id).first_or_404()
+                client_check = ClientCheck(client=client, check_account=check_account)
+                db.session.add(client_check)
+                if CheckConstraint.query.filter_by(client_id=client.id, branch_name=check_account.branch_name).first():
+                    db.session.rollback()
+                    flash('Each client could only have one checking account in a branch!')
+                    return render_template('check_account_edit.html', form=form)
+                check_constraint = CheckConstraint(
+                    client_id=client.id,
+                    branch_name=check_account.branch_name,
+                    check_id=check_account.id
+                )
+                db.session.add(check_constraint)
+
+            db.session.commit()
+            flash('Successfully update account!')
+            return redirect(url_for('.check_account_edit', account_id=check_account.id))
+
+    if account_id != 'create':
+        check_account = CheckAccount.query.filter_by(id=account_id).first_or_404()
+        clients = [c.client.id for c in check_account.clients.all()]
+        form.id.data = check_account.id
+        form.branch_name.data = check_account.branch_name
+        form.employee_id.data = check_account.employee_id
+        form.balance.data = check_account.balance
+        form.over_draft.data = check_account.over_draft
+        form.clients.data = clients
+
+    return render_template('check_account_edit.html', form=form)
+
+
+@main.route('/check_account', methods=['GET', 'POST'])
+def check_account():
+    form = CheckAccountSearchForm()
+    if form.validate_on_submit():
+        resp = make_response(redirect(url_for('.check_account')))
+        resp.set_cookie('search_ca_id', form.id.data, max_age=10*60)
+        resp.set_cookie('search_ca_branch_name', form.branch_name.data, max_age=10*60)
+        resp.set_cookie('search_ca_employee_id', form.employee_id.data, max_age=10*60)
+        resp.set_cookie('search_ca_clients', ','.join(form.clients.data), max_age=10*60)
+        return resp
+
+    query = CheckAccount.query
+
+    search_ca_id = request.cookies.get('search_ca_id', '')
+    search_ca_branch_name = request.cookies.get('search_ca_branch_name', '')
+    search_ca_employee_id = request.cookies.get('search_ca_employee_id', '')
+    search_ca_clients = request.cookies.get('search_ca_clients', '')
+    if search_ca_clients != '':
+        search_ca_clients = search_ca_clients.split(',')
+    else:
+        search_ca_clients = []
+
+    if search_ca_id != '':
+        query = query.filter_by(id=search_ca_id)
+        form.id.data = search_ca_id
+    if search_ca_branch_name != '':
+        query = query.filter_by(branch_name=search_ca_branch_name)
+        form.branch_name.data = search_ca_branch_name
+    if search_ca_employee_id != '':
+        query = query.filter_by(employee_id=search_ca_employee_id)
+        form.employee_id.data = search_ca_employee_id
+    if search_ca_clients != []:
+        for c_id in search_ca_clients:
+            query = query.filter(CheckAccount.clients.any(client_id=c_id))
+        form.clients.data = search_ca_clients
+
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(
+        page, per_page=current_app.config['ITEMS_PER_PAGE'], error_out=False)
+    check_accounts = pagination.items
+
+    return render_template('check_account.html', form=form, check_accounts=check_accounts, pagination=pagination)
+
+
+@main.route('/check_account_all')
+def check_account_show_all():
+    resp = make_response(redirect(url_for('.check_account')))
+    resp.set_cookie('search_ca_id', '', max_age=10*60)
+    resp.set_cookie('search_ca_branch_name', '', max_age=10*60)
+    resp.set_cookie('search_ca_employee_id', '', max_age=10*60)
+    resp.set_cookie('search_ca_clients', '', max_age=10*60)
+    return resp
+
+
+@main.route('/check_account_delete/<string:account_id>')
+def check_account_delete(account_id):
+    check_account = CheckAccount.query.filter_by(id=account_id).first_or_404()
+    ClientCheck.query.filter_by(check_id=check_account.id).delete()
+    CheckConstraint.query.filter_by(check_id=check_account.id).delete()
+    db.session.delete(check_account)
+    db.session.commit()
+    flash('Successfully delete!')
+    return redirect(url_for('.check_account_show_all'))

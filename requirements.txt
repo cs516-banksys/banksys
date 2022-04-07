@@ -1,0 +1,11 @@
+flask 
+flask-bootstrap 
+flask-migrate 
+flask-moment 
+flask-login 
+flask-wtf 
+wtforms
+email-validator 
+sqlalchemy 
+sqlalchemy-migrate
+faker
