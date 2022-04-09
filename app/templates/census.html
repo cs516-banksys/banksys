@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+<div class="panel panel-default">
+
+    <div class="panel-heading">
+        <h1>Business Statistics</h1>
+    </div>
+    <div class="panel-body">
+        <div>
+            <form class="form-inline" method="get">
+                FY:
+                <input class="form-control " name="year" type="text" value="{{year}}">
+                <input class="btn btn-default" type="submit" value="Search">
+            </form>
+        </div>
+        {% if uns != 0 %}
+        <table class="table table-hover">
+            <tr>
+                <th>Branch</th>
+                <th>User count</th>
+                <th>Total deposit</th>
+                <th>Total withdrawl</th>
+                <th>Total loan release</th>
+                <th>Total loan repayment</th>
+                <th></th>
+            </tr>
+            {% for b in bs %}
+            <tr>
+                <td>{{ b.name }}</td>
+                <td>{{ uns[b.name] }}</td>
+                <td>{{ mi1[b.name] }}</td>
+                <td>{{ mo1[b.name] }}</td>
+                <td>{{ mo2[b.name] }}</td>
+                <td>{{ mi2[b.name] }}</td>
+                <td>
+                    <a class="btn btn-info btn-sm" type="buttoon"
+                        href="{{ url_for('main.census',id=b.name) }}">Detailed statistics</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <br>
+        <div id="main1" style="width: 800px;height:500px;margin: 0 auto;"></div>
+        <div id="main2" style="width: 800px;height:500px;margin: 0 auto;"></div>
+        <div id="main3" style="width: 800px;height:500px;margin: 0 auto;"></div>
+        <div id="main4" style="width: 800px;height:500px;margin: 0 auto;"></div>
+        <div id="main5" style="width: 800px;height:500px;margin: 0 auto;"></div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.2.1/echarts.min.js"></script>
+        <script src="https://echarts.baidu.com/asset/theme/macarons.js"></script>
+        <script type="text/javascript">
+            var myChart1 = echarts.init(document.getElementById('main1'), 'macarons');
+            var myChart2 = echarts.init(document.getElementById('main2'), 'macarons');
+            var myChart3 = echarts.init(document.getElementById('main3'), 'macarons');
+            var myChart4 = echarts.init(document.getElementById('main4'), 'macarons');
+            var myChart5 = echarts.init(document.getElementById('main5'), 'macarons');
+
+
+            var bName = {{ bs.name | tojson}};
+            var year = {{ year }};
+            var mi1 = {{ mi1 }};
+            var mi2 = {{ mi2 }};
+            var mo1 = {{ mo1 }};
+            var mo2 = {{ mo2 }};
+
+            var option1 = {
+                title: {
+                    text: bName + 'business statistics',
+                    subtext: 'FY' + year
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['Deposit', 'Withdrawl', 'Loan issuance', 'Loan repayment']
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: { show: true },
+                        dataView: { show: true, readOnly: false },
+                        magicType: { show: true, type: ['line', 'bar'] },
+                        restore: { show: true },
+                        saveAsImage: { show: true }
+                    }
+                },
+                calculable: true,
+                xAxis: [
+                    {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        axisLabel: {
+                            formatter: '${value}'
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Deposit',
+                        type: 'line',
+                        data: mi1,
+                        markPoint: {
+                            data: [
+                                { type: 'max', name: 'maxinum' },
+                                { type: 'min', name: 'minimum' }
+                            ]
+                        },
+                        markLine: {
+                            data: [
+                                { type: 'average', name: 'average' }
+                            ]
+                        }
+                    },
+                    {
+                        name: 'Withdrawl',
+                        type: 'line',
+                        data: mo1,
+                        markPoint: {
+                            data: [
+                                { type: 'max', name: 'maximum' },
+                                { type: 'min', name: 'minimum' }
+                            ]
+                        },
+                        markLine: {
+                            data: [
+                                { type: 'average', name: 'average' }
+                            ]
+                        }
+                    },
+                    {
+                        name: 'Loan issuance',
+                        type: 'line',
+                        data: mo2,
+                        markPoint: {
+                            data: [
+                                { type: 'max', name: 'maximum' },
+                                { type: 'min', name: 'minimum' }
+                            ]
+                        },
+                        markLine: {
+                            data: [
+                                { type: 'average', name: 'average' }
+                            ]
+                        }
+                    },
+                    {
+                        name: 'Loan repayment',
+                        type: 'line',
+                        data: mi2,
+                        markPoint: {
+                            data: [
+                                { type: 'max', name: 'maximum' },
+                                { type: 'min', name: 'minimum' }
+                            ]
+                        },
+                        markLine: {
+                            data: [
+                                { type: 'average', name: 'average' }
+                            ]
+                        }
+                    }
+                ]
+            };
+
+            var option2 = {
+                title: {
+                    text: bName + 'Deposit overview by quarters',
+                    subtext: 'FY' + year,
+                    x: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+                legend: {
+                    orient: 'vertical',
+                    x: 'left',
+                    data: ['Q1', 'Q2', 'Q3', 'Q4']
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: { show: true },
+                        dataView: { show: true, readOnly: false },
+                        magicType: {
+                            show: true,
+                            type: ['pie', 'funnel'],
+                            option: {
+                                funnel: {
+                                    x: '25%',
+                                    width: '50%',
+                                    funnelAlign: 'left',
+                                    max: 1548
+                                }
+                            }
+                        },
+                        restore: { show: true },
+                        saveAsImage: { show: true }
+                    }
+                },
+                calculable: true,
+                series: [
+                    {
+                        name: 'Visited from',
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '60%'],
+                        data: [
+                            { value: mi1[0] + mi1[1] + mi1[2], name: 'Q1' },
+                            { value: mi1[3] + mi1[4] + mi1[5], name: 'Q2' },
+                            { value: mi1[6] + mi1[7] + mi1[8], name: 'Q3' },
+                            { value: mi1[9] + mi1[10] + mi1[11], name: 'Q4' }
+                        ]
+                    }
+                ]
+            };
+
+            var option3 = {
+                title: {
+                    text: bName + 'Loan issuance overview by quarters',
+                    subtext: 'FY' + year,
+                    x: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+                legend: {
+                    orient: 'vertical',
+                    x: 'left',
+                    data: ['Q1', 'Q2', 'Q3', 'Q4']
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: { show: true },
+                        dataView: { show: true, readOnly: false },
+                        magicType: {
+                            show: true,
+                            type: ['pie', 'funnel'],
+                            option: {
+                                funnel: {
+                                    x: '25%',
+                                    width: '50%',
+                                    funnelAlign: 'left',
+                                    max: 1548
+                                }
+                            }
+                        },
+                        restore: { show: true },
+                        saveAsImage: { show: true }
+                    }
+                },
+                calculable: true,
+                series: [
+                    {
+                        name: 'Visitedfrom',
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '60%'],
+                        data: [
+                            { value: mo2[0] + mo2[1] + mo2[2], name: 'Q1' },
+                            { value: mo2[3] + mo2[4] + mo2[5], name: 'Q2' },
+                            { value: mo2[6] + mo2[7] + mo2[8], name: 'Q3' },
+                            { value: mo2[9] + mo2[10] + mo2[11], name: 'Q4' }
+                        ]
+                    }
+                ]
+            };
+
+            var option4 = {
+                title: {
+                    text: bName + 'Withdrawl overview by quarters',
+                    subtext: 'FY' + year,
+                    x: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+                legend: {
+                    orient: 'vertical',
+                    x: 'left',
+                    data: ['Q1', 'Q2', 'Q3', 'Q4']
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: { show: true },
+                        dataView: { show: true, readOnly: false },
+                        magicType: {
+                            show: true,
+                            type: ['pie', 'funnel'],
+                            option: {
+                                funnel: {
+                                    x: '25%',
+                                    width: '50%',
+                                    funnelAlign: 'left',
+                                    max: 1548
+                                }
+                            }
+                        },
+                        restore: { show: true },
+                        saveAsImage: { show: true }
+                    }
+                },
+                calculable: true,
+                series: [
+                    {
+                        name: 'Visited from',
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '60%'],
+                        data: [
+                            { value: mo1[0] + mo1[1] + mo1[2], name: 'Q1' },
+                            { value: mo1[3] + mo1[4] + mo1[5], name: 'Q2' },
+                            { value: mo1[6] + mo1[7] + mo1[8], name: 'Q3' },
+                            { value: mo1[9] + mo1[10] + mo1[11], name: 'Q4' }
+                        ]
+                    }
+                ]
+            };
+
+            var option5 = {
+                title: {
+                    text: bName + 'Loan repayment overview by quarters',
+                    subtext: 'FY' + year,
+                    x: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+                legend: {
+                    orient: 'vertical',
+                    x: 'left',
+                    data: ['Q1', 'Q2', 'Q3', 'Q4']
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: { show: true },
+                        dataView: { show: true, readOnly: false },
+                        magicType: {
+                            show: true,
+                            type: ['pie', 'funnel'],
+                            option: {
+                                funnel: {
+                                    x: '25%',
+                                    width: '50%',
+                                    funnelAlign: 'left',
+                                    max: 1548
+                                }
+                            }
+                        },
+                        restore: { show: true },
+                        saveAsImage: { show: true }
+                    }
+                },
+                calculable: true,
+                series: [
+                    {
+                        name: 'Visited from',
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '60%'],
+                        data: [
+                            { value: mi2[0] + mi2[1] + mi2[2], name: 'Q1' },
+                            { value: mi2[3] + mi2[4] + mi2[5], name: 'Q2' },
+                            { value: mi2[6] + mi2[7] + mi2[8], name: 'Q3' },
+                            { value: mi2[9] + mi2[10] + mi2[11], name: 'Q4' }
+                        ]
+                    }
+                ]
+            };
+            myChart1.setOption(option1);
+            myChart3.setOption(option3);
+            myChart2.setOption(option2);
+            myChart4.setOption(option4);
+            myChart5.setOption(option5);
+
+        </script>
+
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
