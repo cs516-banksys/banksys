@@ -1,7 +1,12 @@
 # banksys
-## Unzip the code.
 
-## set environment:
+## Access the application 
+website: 
+
+## Run locally
+### Unzip the code
+
+### set environment
 Run commands under root dictionary
 
 `export FLASK_ENV=Development`
@@ -10,9 +15,13 @@ Run commands under root dictionary
 
 `export FLASK_DEV=True`
 
-## download reqiured pacakge
+### download reqiured package
 `pip3 install -r requirements.txt`
 
 
-## run
+### run
 `flask run`
+
+### log in
+username: admin
+password: 1234567
