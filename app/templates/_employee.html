@@ -1,0 +1,25 @@
+<table class="table table-hover">
+    <tr>
+        <th>SSN</th>
+        <th>Name</th>
+        <th>Branch</th>
+        <th>Phone Number</th>
+        <th>Address</th>
+        <th>Date of employment</th>
+        <th>Actions</th>
+    </tr>
+    {% for e in employees %}
+    <tr>
+        <td>{{ e.id }}</td>
+        <td>{{ e.name }}</td>
+        <td><a href="{{ url_for('main.branch_edit', branch_name=e.branch.name) }}">{{ e.branch.name }}</a></td>
+        <td>{{ e.phone }}</td>
+        <td>{{ e.address }} </td>
+        <td>{{ e.enroll_date.strftime('%Y-%m-%d') }} </td>
+        <td>
+                <a class="btn btn-success btn-sm" type="buttoon" href="{{ url_for('main.employee_edit', employee_id=e.id) }}">Edit</a>
+                <a class="btn btn-danger btn-sm" type="button" href="{{ url_for('main.employee_delete', id=e.id) }}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
