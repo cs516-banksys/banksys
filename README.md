@@ -1,7 +1,7 @@
 # banksys
 
 ## Access the application 
-http://174.109.112.153:8867/
+website: 
 
 ## Run locally
 ### Unzip the code
