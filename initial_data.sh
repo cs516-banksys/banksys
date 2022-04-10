@@ -31,4 +31,7 @@ sqlite3 data-dev.sqlite -cmd ".mode csv" \
 "insert into savingconstraints select a.id, b.branch_name, b.id from (select row_number() over(order by id) as rm, id from clients) a join (select row_number() over(order by id) as rm, id,branch_name from savings) b on a.rm=b.rm " \
 "delete from checkconstraint" \
 "insert into checkconstraint select a.id, b.branch_name, b.id from (select row_number() over(order by id) as rm, id from clients) a join (select row_number() over(order by id) as rm, id,branch_name from checks) b on a.rm=b.rm " \
-
+"delete from branchrecords" \
+".import db/Branch_records.csv branchrecords" \
+"delete from loanlogs" \
+".import db/Loan_log.csv loanlogs" \
