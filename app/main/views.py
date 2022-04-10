@@ -558,3 +558,280 @@ def check_account_delete(account_id):
     db.session.commit()
     flash('Successfully delete!')
     return redirect(url_for('.check_account_show_all'))
+
+@main.route('/employee', methods=['GET', 'POST'])
+@login_required
+def employee():
+    form = EmployeeSearchForm()
+    if form.validate_on_submit():
+        resp = make_response(redirect(url_for('.employee')))
+        resp.set_cookie('search_employee_id', form.id.data, max_age=10*60)
+        resp.set_cookie('search_employee_name', form.name.data, max_age=10*60)
+        resp.set_cookie('search_employee_branch_name',
+                        form.branch_name.data, max_age=10*60)
+        resp.set_cookie('search_employee_phone',
+                        form.phone.data, max_age=10*60)
+        resp.set_cookie('search_employee_address',
+                        form.address.data, max_age=10*60)
+        return resp
+
+    query = Employee.query
+
+    search_employee_id = request.cookies.get('search_employee_id', '')
+    search_employee_name = request.cookies.get('search_employee_name', '')
+    search_employee_branch_name = request.cookies.get(
+        'search_employee_branch_name', '')
+    search_employee_phone = request.cookies.get('search_employee_phone', '')
+    search_employee_address = request.cookies.get(
+        'search_employee_address', '')
+
+    if search_employee_id != '':
+        query = query.filter_by(id=search_employee_id)
+        form.id.data = search_employee_id
+    if search_employee_name != '':
+        query = query.filter(Employee.name.like(
+            '%' + search_employee_name + '%'))
+        form.name.data = search_employee_name
+    if search_employee_branch_name != '':
+        query = query.filter_by(branch_name=search_employee_branch_name)
+        form.branch_name.data = search_employee_branch_name
+    if search_employee_phone != '':
+        query = query.filter_by(phone=search_employee_phone)
+        form.phone.data = search_employee_phone
+    if search_employee_address != '':
+        query = query.filter(Employee.address.like(
+            '%' + search_employee_address + '%'))
+        form.address.data = search_employee_address
+
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(
+        page, per_page=current_app.config['ITEMS_PER_PAGE'], error_out=False)
+    employees = pagination.items
+
+    return render_template('employee.html', form=form, employees=employees, pagination=pagination)
+
+@main.route('/employee_edit/<string:employee_id>', methods=['GET', 'POST'])
+@login_required
+def employee_edit(employee_id):
+    form = EmployeeEditForm()
+    if form.validate_on_submit():
+        if employee_id == 'create':
+            if Employee.query.filter_by(id=form.id.data).first():
+                flash('This SSN is already registered')
+                return render_template('employee_edit.html', form=form)
+            employee = Employee(
+                id=form.id.data,
+                name=form.name.data,
+                branch_name=form.branch_name.data,
+                phone=form.phone.data,
+                address=form.address.data,
+                enroll_date=form.enroll_date.data
+            )
+            db.session.add(employee)
+            db.session.commit()
+            flash('Staff added')
+            return redirect(url_for('.employee_edit', employee_id=employee.id))
+        else:
+            employee = Employee.query.filter_by(id=employee_id).first_or_404()
+            if employee.id != form.id.data:
+                if Employee.query.filter_by(id=form.id.data).first():
+                    flash("This SSN is already registered")
+                    return render_template('employee_edit.html', form=form)
+            employee.id = form.id.data
+            employee.name = form.name.data
+            employee.branch_name = form.branch_name.data
+            employee.phone = form.phone.data
+            employee.address = form.address.data
+            employee.enroll_date = form.enroll_date.data
+            db.session.add(employee)
+            db.session.commit()
+            flash('Staff information updated')
+            return redirect(url_for('.employee_edit', employee_id=employee.id))
+
+    if employee_id != 'create':
+        employee = Employee.query.filter_by(id=employee_id).first_or_404()
+        form.id.data = employee.id
+        form.name.data = employee.name
+        form.branch_name.data = employee.branch_name
+        form.phone.data = employee.phone
+        form.address.data = employee.address
+        form.enroll_date.data = employee.enroll_date
+
+    return render_template('employee_edit.html', form=form)
+
+@main.route('/employee_all')
+@login_required
+def employee_show_all():
+    resp = make_response(redirect(url_for('.employee')))
+    resp.set_cookie('search_employee_id', '', max_age=10*60)
+    resp.set_cookie('search_employee_name', '', max_age=10*60)
+    resp.set_cookie('search_employee_branch_name', '', max_age=10*60)
+    resp.set_cookie('search_employee_phone', '', max_age=10*60)
+    resp.set_cookie('search_employee_address', '', max_age=10*60)
+    return resp
+
+
+@main.route('/employee_delete/<string:id>')
+@login_required
+def employee_delete(id):
+    employee = Employee.query.filter_by(id=id).first_or_404()
+    if employee.loans_managed.first():
+        flash('Unable to delete: The staff is a manager of a loan')
+        return redirect(url_for('.employee_show_all'))
+    if employee.saving_accounts_managed.first():
+        flash('Unable to delete: The staff is a manager of a checking account')
+        return redirect(url_for('.employee_show_all'))
+    if employee.check_account_managed.first():
+        flash('Unable to delete: The staff is a manager of a saving account')
+        return redirect(url_for('.employee_show_all'))
+    db.session.delete(employee)
+    db.session.commit()
+    flash('Staff deleted')
+    return redirect(url_for('.employee_show_all'))
+
+@main.route('/loan', methods=['GET', 'POST'])
+@login_required
+def loan():
+    form = LoanSearchForm()
+    if form.validate_on_submit():
+        resp = make_response(redirect(url_for('.loan')))
+        resp.set_cookie('search_loan_id', form.id.data, max_age=10*60)
+        resp.set_cookie('search_loan_branch_name', form.branch_name.data, max_age=10*60)
+        resp.set_cookie('search_loan_employee_id', form.employee_id.data, max_age=10*60)
+        resp.set_cookie('search_loan_clients', ','.join(form.clients.data), max_age=10*60)
+        return resp
+
+    query = Loan.query
+
+    search_loan_id = request.cookies.get('search_loan_id', '')
+    search_loan_branch_name = request.cookies.get('search_loan_branch_name', '')
+    search_loan_employee_id = request.cookies.get('search_loan_employee_id', '')
+    search_loan_clients = request.cookies.get('search_loan_clients', '')
+    if search_loan_clients != '':
+        search_loan_clients = search_loan_clients.split(',')
+    else:
+        search_loan_clients = []
+
+    if search_loan_id != '':
+        query = query.filter_by(id=search_loan_id)
+        form.id.data = search_loan_id
+    if search_loan_branch_name != '':
+        query = query.filter_by(branch_name=search_loan_branch_name)
+        form.branch_name.data = search_loan_branch_name
+    if search_loan_employee_id != '':
+        query = query.filter_by(employee_id=search_loan_employee_id)
+        form.employee_id.data = search_loan_employee_id
+    if search_loan_clients != []:
+        for c_id in search_loan_clients:
+            query = query.filter(Loan.clients.any(client_id=c_id))
+        form.clients.data = search_loan_clients
+
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(
+        page, per_page=current_app.config['ITEMS_PER_PAGE'], error_out=False)
+    loans = pagination.items
+
+    return render_template('loan.html', form=form, loans=loans, pagination=pagination)
+
+@main.route('/loan_all')
+@login_required
+def loan_show_all():
+    resp = make_response(redirect(url_for('.loan')))
+    resp.set_cookie('search_loan_id', '', max_age=10*60)
+    resp.set_cookie('search_loan_branch_name', '', max_age=10*60)
+    resp.set_cookie('search_loan_employee_id', '', max_age=10*60)
+    resp.set_cookie('search_loan_clients', '', max_age=10*60)
+    return resp
+
+@main.route('/loan_log_edit/<string:loan_log_id>', methods=['GET', 'POST'])
+@login_required
+def loan_log_edit(loan_log_id):
+    form = LoanLogEditForm()
+    if request.args.get('loan_id'):
+        form.loan_id.data = request.args.get('loan_id')
+    if form.validate_on_submit():
+        if loan_log_id == 'create':
+            if LoanLog.query.filter_by(id=form.id.data).first():
+                flash('This loan ID exists, unable to create')
+                return render_template('loan_log_edit.html', form=form)
+            loan_log = LoanLog(
+                id=form.id.data,
+                loan_id=form.loan_id.data,
+                amount=form.amount.data
+            )
+            db.session.add(loan_log)
+            db.session.commit()
+            total_amount = sum([log.amount for log in loan_log.loan.loan_logs.all()])
+            if total_amount >= loan_log.loan.amount:
+                loan = loan_log.loan
+                loan.status = 'All loans are released'
+                db.session.add(loan)
+                db.session.commit()
+            else:
+                loan = loan_log.loan
+                loan.status = 'Releasing loan'
+                db.session.add(loan)
+                db.session.commit()
+            flash('Added')
+            return redirect(url_for('.loan_show_all'))
+        else:
+            loan_log = LoanLog.query.filter_by(id=loan_log_id).first_or_404()
+            if loan.id != form.id.data:
+                if LoanLog.query.filter_by(id=form.id.data).first():
+                    flash('This loan ID exists, unable to create')
+                    return render_template('loan_log_edit.html', form=form)
+            loan_log.id = form.id.data
+            loan_log.loan_id = form.loan_id.data
+            loan_log.amount = form.amount.data
+            db.session.add(loan)
+            db.session.commit(loan)
+
+            total_amount = sum([log.amount for log in loan_log.loan.loan_logs.all()])
+            if total_amount >= loan_log.loan.amount:
+                loan = loan_log.loan
+                loan.status = 'All loans are released'
+                db.session.add(loan)
+                db.session.commit()
+            else:
+                loan = loan_log.loan
+                loan.status = 'Releasing loan'
+                db.session.add(loan)
+                db.session.commit()
+            flash('Loan info updated')
+            return redirect(url_for('.loan_show_all'))
+
+
+    if loan_log_id != 'create':
+        loan_log = LoanLog.query.filter_by(id=loan_log_id).first_or_404()
+        form.id.data = loan_log.id
+        form.loan_id.data = loan_log.loan_id
+        form.amount.data = loan_log.amount
+
+    return render_template('loan_log_edit.html', form=form)
+
+
+@main.route('/loan_log/<string:loan_id>')
+@login_required
+def loan_log(loan_id):
+    query = LoanLog.query.filter_by(loan_id=loan_id)
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(
+        page, per_page=current_app.config['ITEMS_PER_PAGE'], error_out=False)
+    loan_logs = pagination.items
+
+    return render_template('loan_log.html', loan_logs=loan_logs, pagination=pagination, loan_id=loan_id)
+
+
+@main.route('/loan_delete/<string:loan_id>')
+@login_required
+def loan_delete(loan_id):
+    loan = Loan.query.filter_by(id=loan_id).first_or_404()
+    if loan.status == 'Releasing':
+        flash('Unable to detete releasing loan')
+        return redirect(url_for('.loan_show_all'))
+    loan.clients.delete()
+    loan.loan_logs.delete()
+    db.session.delete(loan)
+    db.session.commit()
+    flash('Deleted')
+    return redirect(url_for('.loan_show_all'))
