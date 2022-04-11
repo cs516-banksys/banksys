@@ -3,12 +3,12 @@ import csv
 from faker import Faker
 
 num_branch = 20
-num_users = 100
+num_users = 1000
 num_employee= 100
-num_saving=100
-num_checking=100
+num_saving=1000
+num_checking=1000
 num_loan=10
-num_branch_records=100
+num_branch_records=1000
 
 Faker.seed(0)
 fake = Faker()
