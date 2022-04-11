@@ -26,3 +26,9 @@ Run commands under root dictionary
 ### log in
 username: admin \
 password: 1234567
+
+## Building the Docker image
+
+To build the docker image: `sudo docker build -t banksys .`
+
+To run the docker image we just built: `sudo docker run -tid -p 5000:5000 banksys`
