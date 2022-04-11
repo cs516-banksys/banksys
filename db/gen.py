@@ -7,8 +7,8 @@ num_users = 100
 num_employee= 100
 num_saving=100
 num_checking=100
-num_loan=20
-
+num_loan=10
+num_branch_records=100
 
 Faker.seed(0)
 fake = Faker()
@@ -113,21 +113,39 @@ def gen_checking(num_checking,branch,employee):
     return
 
 def gen_loan(num_loan,branch,employee):
+    loan=[]
     with open('Loan.csv', 'w') as f:
         writer = get_csv_writer(f)
         print('Loan...', end=' ', flush=True)
         for uid in range(num_loan):
             if uid % 10 == 0:
                 print(f'{uid}', end=' ', flush=True)
-            id =  fake.random_int(min=100000,max=999999)
+            id =   f'{str("LOAN")}{fake.random_int(min=100000,max=999999)}'
             branch_name = fake.random_element(elements=branch)
             employee_id = fake.random_element(elements=employee)
             amount= f'{str(fake.random_int(min=1,max=100000))}.{fake.random_int(max=99):02}'
-            writer.writerow([id,branch_name,employee_id,amount])
+            status=fake.random_element(elements=('Not started to issue', 'Releasing','All loans are released'))
+            if status=='Releasing' or status=='All loans are released':
+                loan.append(id)
+            writer.writerow([id,branch_name,employee_id,amount,status])
         print(f'{num_loan} generated')
+    return loan
+
+def Branch_records(num_branch_records,branch):
+    with open('Branch_records.csv', 'w') as f:
+        writer = get_csv_writer(f)
+        print('branch_records...', end=' ', flush=True)
+        for uid in range(num_branch_records):
+            if uid % 10 == 0:
+                print(f'{uid}', end=' ', flush=True)
+            id =  fake.random_int(min=100000,max=999999)
+            branch_name = fake.random_element(elements=branch)
+            OpType = fake.random_element(elements=('Deposit', 'Withdrawl','Loan issuance'))
+            OpTime= fake.date_time_between(start_date='-2y',end_date='now')
+            OpMoney= f'{str(fake.random_int(min=100,max=100000))}.{fake.random_int(max=99):02}'
+            writer.writerow([id,branch_name,OpType,OpTime,OpMoney])
+        print(f'{num_branch_records} generated')
     return
-
-
 
 
 gen_users(num_users)
@@ -135,4 +153,5 @@ branch=gen_branch(num_branch)
 employee=gen_employee(num_employee,branch)
 gen_saving(num_saving,branch,employee)
 gen_checking(num_checking,branch,employee)
-gen_loan(num_loan,branch,employee)
+loan=gen_loan(num_loan,branch,employee)
+Branch_records(num_branch_records,branch)
