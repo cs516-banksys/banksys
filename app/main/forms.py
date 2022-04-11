@@ -125,7 +125,7 @@ class CheckAccountEditForm(FlaskForm):
 class EmployeeSearchForm(FlaskForm):
     id = StringField("SSN", validators=[
         Optional(),
-        Regexp(r'^(?!666|000|9\\d{2})\\d{3}-(?!00)\\d{2}-(?!0{4})\\d{4}$', 0,
+        Regexp(r'^(?!000|.+0{4})(?:\d{9}|\d{3}-\d{2}-\d{4})$', 0,
             "Invalid SSN")
     ])
     name = StringField("Name")
@@ -143,7 +143,7 @@ class EmployeeSearchForm(FlaskForm):
 class EmployeeEditForm(FlaskForm):
     id = StringField("SSN", validators=[
         InputRequired(),
-        Regexp(r'^(?!666|000|9\\d{2})\\d{3}-(?!00)\\d{2}-(?!0{4})\\d{4}$', 0,
+        Regexp(r'^(?!000|.+0{4})(?:\d{9}|\d{3}-\d{2}-\d{4})$', 0,
             "Invalid SSN")
     ])
     name = StringField("Name", validators=[InputRequired()])
