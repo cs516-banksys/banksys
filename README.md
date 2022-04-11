@@ -1,8 +1,9 @@
 # banksys
 
 ## Access the application 
-website: 
-
+website: \
+username: admin\
+password: 1234567
 ## Run locally
 ### Unzip the code
 
@@ -23,5 +24,5 @@ Run commands under root dictionary
 `flask run`
 
 ### log in
-username: admin
+username: admin \
 password: 1234567
