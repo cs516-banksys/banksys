@@ -1,7 +1,7 @@
 # banksys
 
 ## Access the application 
-website: \
+website: http://174.109.112.153:8867/   \
 username: admin\
 password: 1234567
 ## Run locally
