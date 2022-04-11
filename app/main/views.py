@@ -1,8 +1,8 @@
 from flask import render_template, redirect, url_for, make_response, request, current_app, flash
-from .forms import BranchSearchForm, BranchEditForm, ClientEditForm, ClientSearchForm, SavingAccountEditForm, SavingAccountSearchForm,CheckAccountEditForm, CheckAccountSearchForm
+from .forms import *
 from . import main
 from .. import db
-from ..models import Branch, Client, SavingAccount, ClientSaving, SavingConstraint,CheckAccount, ClientCheck, CheckConstraint
+from ..models import *
 from flask_login import login_required
 from datetime import date
 from sqlalchemy import extract
@@ -244,10 +244,10 @@ def client_show_all():
 def client_delete(id):
     client = Client.query.filter_by(id=id).first_or_404()
     if client.loans.first():
-        flash('Client has loans，cannot delete!')
+        flash('Client has loans, cannot delete!')
         return redirect(url_for('.client_show_all'))
     if client.saving_accounts.first():
-        flash('Client has saving account，cannot delete!')
+        flash('Client has saving account, cannot delete!')
         return redirect(url_for('.client_show_all'))
     db.session.delete(client)
     db.session.commit()
@@ -809,6 +809,62 @@ def loan_log_edit(loan_log_id):
 
     return render_template('loan_log_edit.html', form=form)
 
+@main.route('/loan_edit/<string:loan_id>', methods=['GET', 'POST'])
+def loan_edit(loan_id):
+    form = LoanEditForm()
+    if form.validate_on_submit():
+        if loan_id == 'create':
+            if Loan.query.filter_by(id=form.id.data).first():
+                flash('This loan ID exists')
+                return render_template('loan_edit.html', form=form)
+            loan = Loan(
+                id=form.id.data,
+                branch_name=form.branch_name.data,
+                employee_id=form.employee_id.data,
+                amount=form.amount.data
+            )
+            db.session.add(loan)
+            for c_id in form.clients.data:
+                client = Client.query.filter_by(id=c_id).first_or_404()
+                client_loan = HasLoan(client=client, loan=loan)
+                db.session.add(client_loan)
+            db.session.commit()
+            flash('Loan added')
+            return redirect(url_for('.loan_show_all'))
+        else:
+            loan = Loan.query.filter_by(id=loan_id).first_or_404()
+            if loan.id != form.id.data:
+                if Loan.query.filter_by(id=form.id.data).first():
+                    flash('This loan ID exists')
+                    return render_template('loan_edit.html', form=form)
+            orig_loan_id = loan.id
+            loan.id = form.id.data
+            loan.branch_name = form.branch_name.data
+            loan.employee_id = form.employee_id.data
+            loan.amount = form.amount.data
+            db.session.add(loan)
+
+            HasLoan.query.filter_by(loan_id=orig_loan_id).delete()
+            db.session.commit()
+
+            for c_id in form.clients.data:
+                client = Client.query.filter_by(id=c_id).first_or_404()
+                client_loan = HasLoan(client=client, loan=loan)
+                db.session.add(client_loan)
+            db.session.commit()
+            flash('Loan updated')
+            return redirect(url_for('.loan_show_all'))
+
+    if loan_id != 'create':
+        loan = Loan.query.filter_by(id=loan_id).first_or_404()
+        clients = [c.client.id for c in loan.clients.all()]
+        form.id.data = loan.id
+        form.branch_name.data = loan.branch_name
+        form.employee_id.data = loan.employee_id
+        form.amount.data = loan.amount
+        form.clients.data = clients
+
+    return render_template('loan_edit.html', form=form)
 
 @main.route('/loan_log/<string:loan_id>')
 @login_required
@@ -835,3 +891,65 @@ def loan_delete(loan_id):
     db.session.commit()
     flash('Deleted')
     return redirect(url_for('.loan_show_all'))
+
+@main.route('/census/<string:id>')
+@login_required
+def census(id):
+
+    year = 0
+    if request.args.get('year'):
+        year = int(request.args.get('year'))
+
+    if id == '0':
+        userNums = {}
+        totalMoneyIn1 = {}
+        totalMoneyIn2 = {}
+        totalMoneyOut1 = {}
+        totalMoneyOut2 = {}
+
+        bs = Branch.query.all()
+        for b in bs:
+            ls = Loan.query.filter(Loan.branch_name==b.name).all()
+            temp = []
+            for l in ls:
+                temp += [ul.client_id for ul in HasLoan.query.filter(HasLoan.loan_id==l.id).all()]
+            temp += [uda.client_id for uda in SavingConstraint.query.filter(SavingConstraint.branch_name==b.name).all()]
+            temp += [uda.client_id for uda in CheckConstraint.query.filter(CheckConstraint.branch_name==b.name).all()]
+            userNums[b.name] = len(set(temp))
+            print(f"{b.name}: {userNums[b.name]}")
+            brs = BranchRecords.query
+            if year != 0:
+                brs = brs.filter(extract('year', BranchRecords.OpTime) == year)
+            brs = brs.filter(BranchRecords.branch_name==b.name)
+            totalMoneyIn1[b.name] = sum([br.OpMoney for br in brs.filter(BranchRecords.OpType=='Deposit').all()])
+            totalMoneyOut1[b.name] = sum([br.OpMoney for br in brs.filter(BranchRecords.OpType=='Withdrawl').all()])
+            totalMoneyIn2[b.name] = sum([br.OpMoney for br in brs.filter(BranchRecords.OpType=='Loan repayment').all()])
+            totalMoneyOut2[b.name] = sum([br.OpMoney for br in brs.filter(BranchRecords.OpType=='Loan issuance').all()])
+            print(f"{b.name}: {totalMoneyIn1[b.name]}")
+        print("here")
+        return render_template('census.html',bs=bs, uns=userNums, mi1=totalMoneyIn1, mi2=totalMoneyIn2,
+                               mo1=totalMoneyOut1, mo2=totalMoneyOut2, year = '')
+
+    else:
+        # Search for a branch
+        yearMoneyIn1 = [0] * 12
+        yearMoneyIn2 = [0] * 12
+        yearMoneyOut1 = [0] * 12
+        yearMoneyOut2 = [0] * 12
+
+        if year == 0:
+            year = datetime.date.today().year
+        b = Branch.query.get(id)
+        if not b:
+            flash('No information about this branch')
+            return redirect(url_for('census_page',id='0'))
+        brs = BranchRecords.query.filter(BranchRecords.branch_name == id).filter(extract('year', BranchRecords.OpTime) == year)
+        for month in range(1, 13):
+            brs1 = brs.filter(extract('month', BranchRecords.OpTime) == month)
+            yearMoneyIn1[month - 1] = sum([br.OpMoney for br in brs1.filter(BranchRecords.OpType=='Deposit').all()])
+            yearMoneyOut1[month - 1] = sum([br.OpMoney for br in brs1.filter(BranchRecords.OpType == 'Withdrawl').all()])
+            yearMoneyIn2[month - 1] = sum([br.OpMoney for br in brs1.filter(BranchRecords.OpType == 'Loan repayment').all()])
+            yearMoneyOut2[month - 1] = sum([br.OpMoney for br in brs1.filter(BranchRecords.OpType == 'Loan issuance').all()])
+
+        return render_template('census.html', uns=0, bs=b, mi1=yearMoneyIn1, mi2=yearMoneyIn2,
+                               mo1=yearMoneyOut1, mo2=yearMoneyOut2, year = str(year))
