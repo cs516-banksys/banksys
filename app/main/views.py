@@ -681,7 +681,7 @@ def employee_delete(id):
     if employee.saving_accounts_managed.first():
         flash('Unable to delete: The staff is a manager of a checking account')
         return redirect(url_for('.employee_show_all'))
-    if employee.check_account_managed.first():
+    if employee.check_accounts_managed.first():
         flash('Unable to delete: The staff is a manager of a saving account')
         return redirect(url_for('.employee_show_all'))
     db.session.delete(employee)
