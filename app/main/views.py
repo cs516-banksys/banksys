@@ -125,6 +125,8 @@ def client():
         resp.set_cookie('search_client_phone', form.phone.data, max_age=10*60)
         resp.set_cookie('search_client_address',
                         form.address.data, max_age=10*60)
+        resp.set_cookie('search_client_email',
+                        form.email.data, max_age=10*60)                        
         resp.set_cookie('search_client_contact_name',
                         form.contact_name.data, max_age=10*60)
         return resp
@@ -134,6 +136,7 @@ def client():
     search_client_id = request.cookies.get('search_client_id', '')
     search_client_name = request.cookies.get('search_client_name', '')
     search_client_phone = request.cookies.get('search_client_phone', '')
+    search_client_email = request.cookies.get('search_client_email', '')
     search_client_address = request.cookies.get('search_client_address', '')
     search_client_contact_name = request.cookies.get(
         'search_client_contact_name', '')
@@ -147,6 +150,9 @@ def client():
     if search_client_phone != '':
         query = query.filter_by(phone=search_client_phone)
         form.phone.data = search_client_phone
+    if search_client_email != '':
+        query = query.filter_by(email=search_client_email)
+        form.email.data = search_client_email
     if search_client_address != '':
         query = query.filter(Client.address.like(
             '%' + search_client_address + '%'))
@@ -178,6 +184,7 @@ def client_edit(client_id):
                 name=form.name.data,
                 phone=form.phone.data,
                 address=form.address.data,
+                email=form.email.data,                
                 contact_name=form.contact_name.data,
             )
             if form.contact_phone.data != '':
@@ -200,6 +207,7 @@ def client_edit(client_id):
             client.name = form.name.data
             client.phone = form.phone.data
             client.address = form.address.data
+            client.email = form.email.data
             client.contact_name = form.contact_name.data
             if form.contact_phone.data != '':
                 client.contact_phone = form.contact_phone.data
@@ -218,10 +226,11 @@ def client_edit(client_id):
         form.name.data = client.name
         form.phone.data = client.phone
         form.address.data = client.address
+        form.email.data = client.email
         form.contact_name.data = client.contact_name
         form.contact_phone.data = client.contact_phone
         form.contact_email.data = client.contact_email
-        form.contact_relation = client.contact_relation
+        form.contact_relation.data = client.contact_relation
 
     return render_template('client_edit.html', form=form)
 
@@ -234,6 +243,7 @@ def client_show_all():
     resp.set_cookie('search_client_name', '', max_age=10*60)
     resp.set_cookie('search_client_phone', '', max_age=10*60)
     resp.set_cookie('search_client_address', '', max_age=10*60)
+    resp.set_cookie('search_client_email', '', max_age=10*60)
     resp.set_cookie('search_client_contact_name', '', max_age=10*60)
     return resp
     return render_template('client_edit.html', form=form)

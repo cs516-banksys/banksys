@@ -40,7 +40,7 @@ class ClientEditForm(FlaskForm):
     name = StringField("Name", validators=[InputRequired()])
     phone = StringField("Phone Number", validators=[InputRequired()])
     address = StringField("Address", validators=[InputRequired()])
-    email = StringField("Email", validators=[InputRequired()])
+    email = StringField("Email", validators=[Optional(), Email()])
     contact_name = StringField("Contact Name", validators=[InputRequired()])
     contact_phone = StringField("Contact Phone")
     contact_email = StringField("Contact Email", validators=[Optional(), Email()])
