@@ -1,7 +1,7 @@
 # banksys
 
 ## Access the application 
-website: http://174.109.112.153:8867/   \
+website: http://ellisy.xyz/   \
 username: admin\
 password: 1234567
 ## Run locally
